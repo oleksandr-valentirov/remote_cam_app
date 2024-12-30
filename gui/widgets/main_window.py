@@ -1,17 +1,9 @@
 import socket
-import ctypes
 
 from ..designs.main_window_widget import Ui_MainWindow
+from protocol import pack_payload, DeviceInfo
 
 from PyQt6.QtWidgets import QMainWindow
-
-
-class DeviceInfo(ctypes.LittleEndianStructure):
-    _pack_ = 1
-    _fields_ = (
-        ("type", ctypes.c_uint8),
-        ("name", ctypes.c_uint8 * 23)
-    )
 
 
 class MainWindow(Ui_MainWindow, QMainWindow):
@@ -86,7 +78,11 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 self.server_connect_btn.setText("Disconnect")
 
                 self.server_conn_state = True
-                data = DeviceInfo.from_buffer_copy(bytes([0] * ctypes.sizeof(DeviceInfo)))
+                data = DeviceInfo()
+                data.type = 0
+                for i, c in enumerate("client name".encode()):
+                    data.name[i] = c
+                data = pack_payload(1, 1, bytes(data))
                 self.server_conn_tcp.sendall(data)
         else:
             if self.server_conn_tcp:
