@@ -71,6 +71,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.camera_password)
         self.camera_layout.addLayout(self.verticalLayout)
         self.camera_connect_btn = QtWidgets.QPushButton(parent=self.central_widget)
+        self.camera_connect_btn.setEnabled(False)
         self.camera_connect_btn.setObjectName("camera_connect_btn")
         self.camera_layout.addWidget(self.camera_connect_btn)
         self.camera_layout_2.addLayout(self.camera_layout)

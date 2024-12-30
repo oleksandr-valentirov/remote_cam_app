@@ -1,8 +1,17 @@
 import socket
+import ctypes
 
 from ..designs.main_window_widget import Ui_MainWindow
 
 from PyQt6.QtWidgets import QMainWindow
+
+
+class DeviceInfo(ctypes.LittleEndianStructure):
+    _pack_ = 1
+    _fields_ = (
+        ("type", ctypes.c_uint8),
+        ("name", ctypes.c_uint8 * 23)
+    )
 
 
 class MainWindow(Ui_MainWindow, QMainWindow):
@@ -20,7 +29,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.cam_conn_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
         self.server_conn_state = False
-        self.server_conn_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_conn_tcp = None
 
     def connect_camera(self):
         if not self.cam_conn_state:
@@ -59,12 +68,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def connect_server(self):
         if not self.server_conn_state:
             ip, port = self.server_ip.text().strip().split(':')
+            self.server_conn_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
-                self.server_conn_tcp.connect((ip, port))
-                self.server_ip.setEnabled(False)
-                self.server_password.setEnabled(False)
-                self.server_connect_btn.setText("Disconnect")
-                self.server_conn_state = True
+                self.server_conn_tcp.connect((ip, int(port)))
             except socket.timeout:
                 self.statusBar().showMessage(f"Помилка: час підключення до {ip}:{port} вичерпано (timeout).")
             except socket.gaierror:
@@ -73,12 +79,22 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 self.statusBar().showMessage(f"Помилка: сервер {ip}:{port} відмовився від з'єднання.")
             except Exception as e:
                 self.statusBar().showMessage(f"Невідома помилка: {e}")
+            else:
+                self.camera_connect_btn.setEnabled(True)
+                self.server_ip.setEnabled(False)
+                self.server_password.setEnabled(False)
+                self.server_connect_btn.setText("Disconnect")
+
+                self.server_conn_state = True
+                data = DeviceInfo.from_buffer_copy(bytes([0] * ctypes.sizeof(DeviceInfo)))
+                self.server_conn_tcp.sendall(data)
         else:
             if self.server_conn_tcp:
                 self.server_conn_tcp.close()
             self.server_ip.setEnabled(True)
             self.server_password.setEnabled(True)
             self.server_connect_btn.setText("Connect")
+            self.camera_connect_btn.setEnabled(False)
 
             self.server_conn_state = False
 
