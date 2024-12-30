@@ -23,53 +23,109 @@
      </layout>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,1">
+     <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,1">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
+       <layout class="QVBoxLayout" name="server_layout_2">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Server</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="server_layout">
           <item>
-           <widget class="QLineEdit" name="ip_addr">
-            <property name="text">
-             <string/>
-            </property>
-            <property name="maxLength">
-             <number>15</number>
-            </property>
-            <property name="placeholderText">
-             <string>IP address</string>
-            </property>
-           </widget>
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <item>
+             <widget class="QLineEdit" name="server_ip">
+              <property name="maxLength">
+               <number>21</number>
+              </property>
+              <property name="placeholderText">
+               <string>IP address</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="server_password">
+              <property name="maxLength">
+               <number>20</number>
+              </property>
+              <property name="echoMode">
+               <enum>QLineEdit::Password</enum>
+              </property>
+              <property name="placeholderText">
+               <string>Password</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
-           <widget class="QLineEdit" name="password">
+           <widget class="QPushButton" name="server_connect_btn">
             <property name="text">
-             <string/>
-            </property>
-            <property name="maxLength">
-             <number>20</number>
-            </property>
-            <property name="echoMode">
-             <enum>QLineEdit::Password</enum>
-            </property>
-            <property name="placeholderText">
-             <string>Password</string>
+             <string>Connect</string>
             </property>
            </widget>
           </item>
          </layout>
         </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="camera_layout_2">
         <item>
-         <widget class="QPushButton" name="connect_btn">
+         <widget class="QLabel" name="label_2">
           <property name="text">
-           <string>Connect</string>
+           <string>Camera</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="camera_layout">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout">
+            <item>
+             <widget class="QComboBox" name="camera_name"/>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="camera_password">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="maxLength">
+               <number>20</number>
+              </property>
+              <property name="echoMode">
+               <enum>QLineEdit::Password</enum>
+              </property>
+              <property name="placeholderText">
+               <string>Password</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QPushButton" name="camera_connect_btn">
+            <property name="text">
+             <string>Connect</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <layout class="QHBoxLayout" name="control_layout">
         <item>
          <widget class="QSlider" name="x_slider">
           <property name="minimumSize">
@@ -126,14 +182,14 @@
  <resources/>
  <connections>
   <connection>
-   <sender>connect_btn</sender>
+   <sender>camera_connect_btn</sender>
    <signal>clicked()</signal>
    <receiver>MainWindow</receiver>
-   <slot>connect()</slot>
+   <slot>connect_camera()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>688</x>
-     <y>34</y>
+     <x>708</x>
+     <y>142</y>
     </hint>
     <hint type="destinationlabel">
      <x>640</x>
@@ -141,8 +197,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>server_connect_btn</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>connect_server()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>688</x>
+     <y>60</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>680</x>
+     <y>28</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
-  <slot>connect()</slot>
+  <slot>connect_camera()</slot>
+  <slot>connect_server()</slot>
  </slots>
 </ui>
