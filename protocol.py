@@ -55,5 +55,5 @@ class CamPos(ctypes.LittleEndianStructure):
 class ConnectCmd(ctypes.LittleEndianStructure):
     _pack_ = 1
     _fields_ = (
-        ("name", ctypes.c_uint8 * NAME_LEN)
+        ("name", ctypes.c_uint8 * NAME_LEN),
     )
