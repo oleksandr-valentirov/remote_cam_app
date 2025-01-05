@@ -57,3 +57,14 @@ class ConnectCmd(ctypes.LittleEndianStructure):
     _fields_ = (
         ("name", ctypes.c_uint8 * NAME_LEN),
     )
+
+
+def get_cameras_list(payload: bytes) -> ctypes.LittleEndianStructure:
+    class CamerasList(ctypes.LittleEndianStructure):
+        _pack_ = 1
+        _fields_ = (
+            ("count", ctypes.c_uint8),
+            ("devices", DeviceInfo * payload[0])
+        )
+    
+    return CamerasList.from_buffer_copy(payload)

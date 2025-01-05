@@ -1,7 +1,8 @@
 import socket
 
 from ..designs.main_window_widget import Ui_MainWindow
-from protocol import pack_payload, DeviceInfo
+from protocol import pack_payload, DeviceInfo, Header, get_cameras_list
+from ctypes import sizeof
 
 from PyQt6.QtWidgets import QMainWindow
 
@@ -61,6 +62,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         if not self.server_conn_state:
             ip, port = self.server_ip.text().strip().split(':')
             self.server_conn_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.server_conn_tcp.settimeout(3)
             try:
                 self.server_conn_tcp.connect((ip, int(port)))
             except socket.timeout:
@@ -77,6 +79,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 self.server_password.setEnabled(False)
                 self.server_connect_btn.setText("Disconnect")
 
+                # auth
                 self.server_conn_state = True
                 data = DeviceInfo()
                 data.type = 0
@@ -84,6 +87,10 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                     data.name[i] = c
                 data = pack_payload(1, 1, bytes(data))
                 self.server_conn_tcp.sendall(data)
+
+                # fetch cameras list
+                self.refresh_cam_list()
+
         else:
             if self.server_conn_tcp:
                 self.server_conn_tcp.close()
@@ -96,3 +103,37 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     def connection_handler(self):
         pass
+
+    def refresh_cam_list(self):
+        data = Header()
+        data.cmd_class = 1
+        data.cmd_id = 2
+        data.payload_len = 0
+        self.server_conn_tcp.sendall(data)
+
+        try:  # get header
+            data = self.server_conn_tcp.recv(sizeof(Header))
+            header = Header.from_buffer_copy(data)
+        except socket.timeout:
+            self.statusBar().showMessage("Помилка: таймаут отримання заголовку списку камер")
+            return
+        except Exception as e:
+            self.statusBar().showMessage(f"Невідома помилка: {e}")
+            return
+
+        if header.cmd_class == 1 and header.cmd_id == 2:
+            try:  # get payload
+                data = self.server_conn_tcp.recv(header.payload_len)
+                payload = get_cameras_list(data)
+            except socket.timeout:
+                self.statusBar().showMessage("Помилка: таймаут отримання списку камер")
+                return
+            except Exception as e:
+                self.statusBar().showMessage(f"Невідома помилка: {e}")
+                return
+
+            self.camera_name.clear()
+            for cam in payload.devices:
+                name = ''.join([chr(c) for c in filter(lambda c: True if 33 <= c <= 126 else False, [c for c in cam.name])]).strip()
+                self.camera_name.addItem(name)
+            self.statusBar().showMessage(f"Отримано {payload.count} камер")

@@ -3,7 +3,7 @@ import threading
 
 from ctypes import sizeof
 
-from protocol import DeviceInfo, Header, ConnectCmd
+from protocol import DeviceInfo, Header, ConnectCmd, pack_payload
 
 
 is_exit = False
@@ -12,6 +12,17 @@ sock.settimeout(1)
 sock.bind(("0.0.0.0", 7777))
 connections = []
 cameras = []
+
+
+def remove_conn(sock, client_type):
+    if client_type == 0:
+        for i, c in enumerate(connections):
+            if c["sock"] == sock:
+                connections.pop(i)
+    elif client_type == 1:
+        for i, c in enumerate(cameras):
+            if c["sock"] == sock:
+                cameras.pop(i)
 
 
 def handle_connection(sock: socket.socket, addr, client):
@@ -25,16 +36,24 @@ def handle_connection(sock: socket.socket, addr, client):
         if not data:
             break  # socket was closed
         header = Header.from_buffer_copy(data)
-        if header.cmd_class == 2 and header.cmd_id == 1 and header.payload_len == sizeof(ConnectCmd):
-            # send a connect command to the camera with the name match
-            name = ''.join([chr(c) for c in client.name]).strip()
-            for cam in cameras:
-                cam_name = ''.join([chr(c) for c in cam.name]).strip()
-                if name == cam_name:
-                    pass
-                    break
-    print("closing")
+
+        # process cmd
+        if client.type == 0:  # 0 is client, 1 is camera
+            if header.cmd_class == 2 and header.cmd_id == 1 and header.payload_len == sizeof(ConnectCmd):
+                # send a connect command to the camera with the name match
+                name = ''.join([chr(c) for c in client.name]).strip()
+                for cam in cameras:
+                    cam_name = ''.join([chr(c) for c in cam.name]).strip()
+                    if name == cam_name:
+                        pass
+                        break
+            elif header.cmd_class == 1 and header.cmd_id == 2 and header.payload_len == 0:
+                # return a list of DeviceInfo with connected cameras
+                devices_to_pack = b''.join([len(cameras).to_bytes(1, "little")] + [bytes(cam["client"]) for cam in cameras])
+                data = pack_payload(1, 2, devices_to_pack)
+                sock.sendall(data)
     sock.close()
+    remove_conn(sock, client.type)
 
 
 def listener():
@@ -65,7 +84,7 @@ def listener():
                 continue
 
             thread = threading.Thread(target=handle_connection, args=(client_socket, client_address, client))
-            if client.type == 0:
+            if client.type == 0:  # 0 is client, 1 is camera
                 connections.append({"sock": client_socket, "addr": client_address, "client": client, "thread": thread})
             elif client.type == 1:
                 cameras.append({"sock": client_socket, "addr": client_address, "client": client, "thread": thread})

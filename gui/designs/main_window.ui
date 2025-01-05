@@ -66,11 +66,22 @@
            </layout>
           </item>
           <item>
-           <widget class="QPushButton" name="server_connect_btn">
-            <property name="text">
-             <string>Connect</string>
-            </property>
-           </widget>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="QPushButton" name="server_connect_btn">
+              <property name="text">
+               <string>Connect</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="refresh_btn">
+              <property name="text">
+               <string>Refresh</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
@@ -207,8 +218,8 @@
    <slot>connect_server()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>688</x>
-     <y>60</y>
+     <x>707</x>
+     <y>54</y>
     </hint>
     <hint type="destinationlabel">
      <x>680</x>
@@ -216,9 +227,26 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>refresh_btn</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>refresh_cam_list()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>650</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>516</x>
+     <y>26</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>connect_camera()</slot>
   <slot>connect_server()</slot>
+  <slot>refresh_cam_list()</slot>
  </slots>
 </ui>

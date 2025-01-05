@@ -45,9 +45,15 @@ class Ui_MainWindow(object):
         self.server_password.setObjectName("server_password")
         self.verticalLayout_2.addWidget(self.server_password)
         self.server_layout.addLayout(self.verticalLayout_2)
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.server_connect_btn = QtWidgets.QPushButton(parent=self.central_widget)
         self.server_connect_btn.setObjectName("server_connect_btn")
-        self.server_layout.addWidget(self.server_connect_btn)
+        self.verticalLayout_4.addWidget(self.server_connect_btn)
+        self.refresh_btn = QtWidgets.QPushButton(parent=self.central_widget)
+        self.refresh_btn.setObjectName("refresh_btn")
+        self.verticalLayout_4.addWidget(self.refresh_btn)
+        self.server_layout.addLayout(self.verticalLayout_4)
         self.server_layout_2.addLayout(self.server_layout)
         self.verticalLayout_3.addLayout(self.server_layout_2)
         self.camera_layout_2 = QtWidgets.QVBoxLayout()
@@ -104,6 +110,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         self.camera_connect_btn.clicked.connect(MainWindow.connect_camera) # type: ignore
         self.server_connect_btn.clicked.connect(MainWindow.connect_server) # type: ignore
+        self.refresh_btn.clicked.connect(MainWindow.refresh_cam_list) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -113,6 +120,7 @@ class Ui_MainWindow(object):
         self.server_ip.setPlaceholderText(_translate("MainWindow", "IP address"))
         self.server_password.setPlaceholderText(_translate("MainWindow", "Password"))
         self.server_connect_btn.setText(_translate("MainWindow", "Connect"))
+        self.refresh_btn.setText(_translate("MainWindow", "Refresh"))
         self.label_2.setText(_translate("MainWindow", "Camera"))
         self.camera_password.setPlaceholderText(_translate("MainWindow", "Password"))
         self.camera_connect_btn.setText(_translate("MainWindow", "Connect"))
