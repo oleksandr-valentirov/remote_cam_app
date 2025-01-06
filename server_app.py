@@ -3,7 +3,7 @@ import threading
 
 from ctypes import sizeof
 
-from protocol import DeviceInfo, Header, ConnectCmd, pack_payload
+from protocol import DeviceInfo, Header, ConnectCmdIn, pack_payload, ConnectCmdOut
 
 
 is_exit = False
@@ -35,17 +35,27 @@ def handle_connection(sock: socket.socket, addr, client):
 
         if not data:
             break  # socket was closed
+        
         header = Header.from_buffer_copy(data)
+        if (header.payload_len):
+            try:
+                data = sock.recv(header.payload_len)
+            except socket.timeout:
+                continue
 
         # process cmd
         if client.type == 0:  # 0 is client, 1 is camera
-            if header.cmd_class == 2 and header.cmd_id == 1 and header.payload_len == sizeof(ConnectCmd):
+            if header.cmd_class == 2 and header.cmd_id == 1 and header.payload_len == len(data):
                 # send a connect command to the camera with the name match
-                name = ''.join([chr(c) for c in client.name]).strip()
+                payload = ConnectCmdIn.from_buffer_copy(data)
+                name = ''.join([chr(c) for c in filter(lambda c: True if 33 <= c <= 126 else False, [c for c in payload.name])]).strip()
                 for cam in cameras:
-                    cam_name = ''.join([chr(c) for c in cam.name]).strip()
+                    cam_name = ''.join([chr(c) for c in filter(lambda c: True if 33 <= c <= 126 else False, [c for c in cam["client"].name])]).strip()
                     if name == cam_name:
-                        pass
+                        data = ConnectCmdOut()
+                        data.port = payload.port
+                        data.ip = int.from_bytes(socket.inet_pton(socket.AF_INET, addr[0]), "little")
+                        cam["sock"].sendall(pack_payload(2, 1, bytes(data)))
                         break
             elif header.cmd_class == 1 and header.cmd_id == 2 and header.payload_len == 0:
                 # return a list of DeviceInfo with connected cameras

@@ -1,7 +1,7 @@
 import socket
 
 from ..designs.main_window_widget import Ui_MainWindow
-from protocol import pack_payload, DeviceInfo, Header, get_cameras_list
+from protocol import pack_payload, DeviceInfo, Header, get_cameras_list, ConnectCmdIn
 from ctypes import sizeof
 
 from PyQt6.QtWidgets import QMainWindow
@@ -14,9 +14,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.setupUi(self)
 
         self.cam_conn_state = False
-        self.cam_conn_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.cam_conn_tcp.settimeout(5)
-        self.cam_conn_tcp.bind(("0.0.0.0", 7778))
+        self.cam_conn_tcp = None
         self.client_socket = None
         self.client_address = None
         self.cam_conn_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -27,16 +25,26 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def connect_camera(self):
         if not self.cam_conn_state:
             # open sockets
+            self.cam_conn_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.cam_conn_tcp.settimeout(5)
+            self.cam_conn_tcp.bind(("0.0.0.0", 7778))
             self.cam_conn_tcp.listen(1)
 
             # send connection command over the server for reverse connection from the camera to this program
-            pass
+            data = ConnectCmdIn()
+            for i, c in enumerate(self.camera_name.currentText().encode()):
+                data.name[i] = c
+            data.port = 7778
+            data = pack_payload(2, 1, bytes(data))
+            self.server_conn_tcp.sendall(data)
 
             try:
                 # wait for the connection
                 self.client_socket, self.client_address = self.cam_conn_tcp.accept()
             except socket.timeout:
                 self.statusBar().showMessage("Час очікування підключення вичерпано. Немає підключень.")
+                self.cam_conn_tcp.close()
+                self.cam_conn_tcp = None
             except Exception as e:
                 self.statusBar().showMessage(f"Невідома помилка: {e}")
             else:
@@ -45,12 +53,14 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 self.server_connect_btn.setEnabled(False)
                 self.camera_connect_btn.setText("Disconnect")
                 self.cam_conn_state = True
+                self.statusBar().showMessage(f"Камера {self.camera_name.currentText()} підключена")
 
                 # start connection handler
                 pass
         else:
             if self.cam_conn_tcp:
                 self.cam_conn_tcp.close()  # close connection
+                self.client_socket.close()
             self.camera_name.setEnabled(True)
             self.camera_password.setEnabled(True)
             self.server_connect_btn.setEnabled(True)

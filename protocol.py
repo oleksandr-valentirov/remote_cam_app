@@ -52,10 +52,19 @@ class CamPos(ctypes.LittleEndianStructure):
     )
 
 
-class ConnectCmd(ctypes.LittleEndianStructure):
+class ConnectCmdIn(ctypes.LittleEndianStructure):
     _pack_ = 1
     _fields_ = (
         ("name", ctypes.c_uint8 * NAME_LEN),
+        ("port", ctypes.c_uint16)
+    )
+
+
+class ConnectCmdOut(ctypes.LittleEndianStructure):
+    _pack_ = 1
+    _fields_ = (
+        ("ip", ctypes.c_uint32),
+        ("port", ctypes.c_uint16)
     )
 
 
