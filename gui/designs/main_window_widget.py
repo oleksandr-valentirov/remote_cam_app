@@ -76,23 +76,33 @@ class Ui_MainWindow(object):
         self.camera_password.setObjectName("camera_password")
         self.verticalLayout.addWidget(self.camera_password)
         self.camera_layout.addLayout(self.verticalLayout)
+        self.verticalLayout_5 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_5.setObjectName("verticalLayout_5")
+        self.proxy_checkBox = QtWidgets.QCheckBox(parent=self.central_widget)
+        self.proxy_checkBox.setObjectName("proxy_checkBox")
+        self.verticalLayout_5.addWidget(self.proxy_checkBox)
         self.camera_connect_btn = QtWidgets.QPushButton(parent=self.central_widget)
         self.camera_connect_btn.setEnabled(False)
         self.camera_connect_btn.setObjectName("camera_connect_btn")
-        self.camera_layout.addWidget(self.camera_connect_btn)
+        self.verticalLayout_5.addWidget(self.camera_connect_btn)
+        self.camera_layout.addLayout(self.verticalLayout_5)
         self.camera_layout_2.addLayout(self.camera_layout)
         self.verticalLayout_3.addLayout(self.camera_layout_2)
         self.control_layout = QtWidgets.QHBoxLayout()
         self.control_layout.setObjectName("control_layout")
         self.x_slider = QtWidgets.QSlider(parent=self.central_widget)
         self.x_slider.setMinimumSize(QtCore.QSize(188, 0))
-        self.x_slider.setProperty("value", 50)
+        self.x_slider.setMinimum(-50)
+        self.x_slider.setMaximum(50)
+        self.x_slider.setProperty("value", 0)
         self.x_slider.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.x_slider.setObjectName("x_slider")
         self.control_layout.addWidget(self.x_slider)
         self.y_slider = QtWidgets.QSlider(parent=self.central_widget)
         self.y_slider.setMinimumSize(QtCore.QSize(0, 188))
-        self.y_slider.setProperty("value", 50)
+        self.y_slider.setMinimum(-50)
+        self.y_slider.setMaximum(50)
+        self.y_slider.setProperty("value", 0)
         self.y_slider.setOrientation(QtCore.Qt.Orientation.Vertical)
         self.y_slider.setObjectName("y_slider")
         self.control_layout.addWidget(self.y_slider)
@@ -111,6 +121,8 @@ class Ui_MainWindow(object):
         self.camera_connect_btn.clicked.connect(MainWindow.connect_camera) # type: ignore
         self.server_connect_btn.clicked.connect(MainWindow.connect_server) # type: ignore
         self.refresh_btn.clicked.connect(MainWindow.refresh_cam_list) # type: ignore
+        self.x_slider.sliderReleased.connect(MainWindow.ctrl_val_update) # type: ignore
+        self.y_slider.sliderReleased.connect(MainWindow.ctrl_val_update) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -123,4 +135,5 @@ class Ui_MainWindow(object):
         self.refresh_btn.setText(_translate("MainWindow", "Refresh"))
         self.label_2.setText(_translate("MainWindow", "Camera"))
         self.camera_password.setPlaceholderText(_translate("MainWindow", "Password"))
+        self.proxy_checkBox.setText(_translate("MainWindow", "with proxy"))
         self.camera_connect_btn.setText(_translate("MainWindow", "Connect"))

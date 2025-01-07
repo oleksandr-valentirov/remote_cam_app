@@ -3,7 +3,7 @@ import threading
 
 from ctypes import sizeof
 
-from protocol import DeviceInfo, Header, ConnectCmdIn, pack_payload, ConnectCmdOut
+from protocol import DeviceInfo, Header, ConnectCmdIn, pack_payload, ConnectCmdOut, CamPos
 
 
 is_exit = False
@@ -35,7 +35,7 @@ def handle_connection(sock: socket.socket, addr, client):
 
         if not data:
             break  # socket was closed
-        
+
         header = Header.from_buffer_copy(data)
         if (header.payload_len):
             try:
@@ -62,6 +62,12 @@ def handle_connection(sock: socket.socket, addr, client):
                 devices_to_pack = b''.join([len(cameras).to_bytes(1, "little")] + [bytes(cam["client"]) for cam in cameras])
                 data = pack_payload(1, 2, devices_to_pack)
                 sock.sendall(data)
+            elif header.cmd_class == 3 and header.cmd_id in (1, 2):
+                # in case of (3, x) messages working as proxy
+                if header.cmd_id == 1 and header.payload_len == len(data):
+                    sock.sendall(pack_payload(3, 1, data))
+                elif header.cmd_id == 2 and header.payload_len == 0:
+                    pass
     sock.close()
     remove_conn(sock, client.type)
 

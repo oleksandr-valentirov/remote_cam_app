@@ -125,14 +125,25 @@
            </layout>
           </item>
           <item>
-           <widget class="QPushButton" name="camera_connect_btn">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>Connect</string>
-            </property>
-           </widget>
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <item>
+             <widget class="QCheckBox" name="proxy_checkBox">
+              <property name="text">
+               <string>with proxy</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="camera_connect_btn">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string>Connect</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
@@ -148,8 +159,14 @@
             <height>0</height>
            </size>
           </property>
-          <property name="value">
+          <property name="minimum">
+           <number>-50</number>
+          </property>
+          <property name="maximum">
            <number>50</number>
+          </property>
+          <property name="value">
+           <number>0</number>
           </property>
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -164,8 +181,14 @@
             <height>188</height>
            </size>
           </property>
-          <property name="value">
+          <property name="minimum">
+           <number>-50</number>
+          </property>
+          <property name="maximum">
            <number>50</number>
+          </property>
+          <property name="value">
+           <number>0</number>
           </property>
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -243,10 +266,43 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>x_slider</sender>
+   <signal>sliderReleased()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>ctrl_val_update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>565</x>
+     <y>257</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>526</x>
+     <y>191</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>y_slider</sender>
+   <signal>sliderReleased()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>ctrl_val_update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>701</x>
+     <y>210</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>627</x>
+     <y>206</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>connect_camera()</slot>
   <slot>connect_server()</slot>
   <slot>refresh_cam_list()</slot>
+  <slot>ctrl_val_update()</slot>
  </slots>
 </ui>

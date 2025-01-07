@@ -47,8 +47,8 @@ class Header(ctypes.LittleEndianStructure):
 class CamPos(ctypes.LittleEndianStructure):
     _pack_ = 1
     _fields_ = (
-        ("x", ctypes.c_uint8),
-        ("y", ctypes.c_uint8)
+        ("x", ctypes.c_int8),
+        ("y", ctypes.c_int8)
     )
 
 

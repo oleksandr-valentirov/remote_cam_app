@@ -1,10 +1,11 @@
 import socket
 
 from ..designs.main_window_widget import Ui_MainWindow
-from protocol import pack_payload, DeviceInfo, Header, get_cameras_list, ConnectCmdIn
+from protocol import pack_payload, DeviceInfo, Header, get_cameras_list, ConnectCmdIn, CamPos
 from ctypes import sizeof
 
 from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtCore import QThread, pyqtSignal
 
 
 class MainWindow(Ui_MainWindow, QMainWindow):
@@ -111,6 +112,14 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
             self.server_conn_state = False
 
+    def ctrl_val_update(self):
+        if self.cam_conn_tcp and self.cam_conn_state:
+            data = CamPos()
+            data.x = self.x_slider.value()
+            data.y = self.y_slider.value()
+            data = pack_payload(3, 1, bytes(data))
+            self.client_socket.sendall(data)
+
     def connection_handler(self):
         pass
 
@@ -147,3 +156,32 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 name = ''.join([chr(c) for c in filter(lambda c: True if 33 <= c <= 126 else False, [c for c in cam.name])]).strip()
                 self.camera_name.addItem(name)
             self.statusBar().showMessage(f"Отримано {payload.count} камер")
+
+
+class UdpListenerThread(QThread):
+    message_received = pyqtSignal(bytes)
+
+    def __init__(self, port):
+        super().__init__()
+        self.port = port
+        self.running = True
+
+    def run(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind("0.0.0.0", self.port)
+        sock.settimeout(1)
+        while self.running:
+            try:
+                data = sock.recv(1024)
+            except socket.timeout:
+                continue
+
+            self.message_received.emit(data)
+
+            if not data:
+                self.stop()  # socket was closed
+        sock.close()
+
+    def stop(self):
+        self.running = False
+        self.wait()
