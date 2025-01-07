@@ -27,6 +27,7 @@ def remove_conn(sock, client_type):
 
 def handle_connection(sock: socket.socket, addr, client):
     print(f"client type {client.type} name \"{''.join([chr(c) for c in client.name])}\" addr {addr}")
+    proxy_cam = None
     while not is_exit:
         try:
             data = sock.recv(sizeof(Header))
@@ -57,6 +58,15 @@ def handle_connection(sock: socket.socket, addr, client):
                         data.ip = int.from_bytes(socket.inet_pton(socket.AF_INET, addr[0]), "little")
                         cam["sock"].sendall(pack_payload(2, 1, bytes(data)))
                         break
+            elif header.cmd_class == 2 and header.cmd_id == 2 and header.payload_len == len(data):
+                payload = ConnectCmdIn.from_buffer_copy(data)
+                name = ''.join([chr(c) for c in filter(lambda c: True if 33 <= c <= 126 else False, [c for c in payload.name])]).strip()
+                for cam in cameras:
+                    cam_name = ''.join([chr(c) for c in filter(lambda c: True if 33 <= c <= 126 else False, [c for c in cam["client"].name])]).strip()
+                    if name == cam_name:
+                        proxy_cam = cam
+            elif header.cmd_class == 2 and header.cmd_id == 3 and header.payload_len == 0:
+                proxy_cam = None
             elif header.cmd_class == 1 and header.cmd_id == 2 and header.payload_len == 0:
                 # return a list of DeviceInfo with connected cameras
                 devices_to_pack = b''.join([len(cameras).to_bytes(1, "little")] + [bytes(cam["client"]) for cam in cameras])
@@ -64,8 +74,8 @@ def handle_connection(sock: socket.socket, addr, client):
                 sock.sendall(data)
             elif header.cmd_class == 3 and header.cmd_id in (1, 2):
                 # in case of (3, x) messages working as proxy
-                if header.cmd_id == 1 and header.payload_len == len(data):
-                    sock.sendall(pack_payload(3, 1, data))
+                if header.cmd_id == 1 and header.payload_len == len(data) and proxy_cam:
+                    proxy_cam["sock"].sendall(pack_payload(3, 1, data))
                 elif header.cmd_id == 2 and header.payload_len == 0:
                     pass
     sock.close()

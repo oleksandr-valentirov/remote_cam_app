@@ -121,8 +121,8 @@ class Ui_MainWindow(object):
         self.camera_connect_btn.clicked.connect(MainWindow.connect_camera) # type: ignore
         self.server_connect_btn.clicked.connect(MainWindow.connect_server) # type: ignore
         self.refresh_btn.clicked.connect(MainWindow.refresh_cam_list) # type: ignore
-        self.x_slider.sliderReleased.connect(MainWindow.ctrl_val_update) # type: ignore
-        self.y_slider.sliderReleased.connect(MainWindow.ctrl_val_update) # type: ignore
+        self.x_slider.valueChanged['int'].connect(MainWindow.ctrl_val_update) # type: ignore
+        self.y_slider.valueChanged['int'].connect(MainWindow.ctrl_val_update) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):

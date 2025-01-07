@@ -225,8 +225,8 @@
    <slot>connect_camera()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>708</x>
-     <y>142</y>
+     <x>707</x>
+     <y>160</y>
     </hint>
     <hint type="destinationlabel">
      <x>640</x>
@@ -268,7 +268,7 @@
   </connection>
   <connection>
    <sender>x_slider</sender>
-   <signal>sliderReleased()</signal>
+   <signal>valueChanged(int)</signal>
    <receiver>MainWindow</receiver>
    <slot>ctrl_val_update()</slot>
    <hints>
@@ -284,7 +284,7 @@
   </connection>
   <connection>
    <sender>y_slider</sender>
-   <signal>sliderReleased()</signal>
+   <signal>valueChanged(int)</signal>
    <receiver>MainWindow</receiver>
    <slot>ctrl_val_update()</slot>
    <hints>

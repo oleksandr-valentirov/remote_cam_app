@@ -24,7 +24,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.server_conn_tcp = None
 
     def connect_camera(self):
-        if not self.cam_conn_state:
+        if not self.cam_conn_state and not self.proxy_checkBox.isChecked():
             # open sockets
             self.cam_conn_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.cam_conn_tcp.settimeout(5)
@@ -53,19 +53,45 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 self.camera_password.setEnabled(False)
                 self.server_connect_btn.setEnabled(False)
                 self.camera_connect_btn.setText("Disconnect")
+                self.proxy_checkBox.setEnabled(False)
                 self.cam_conn_state = True
                 self.statusBar().showMessage(f"Камера {self.camera_name.currentText()} підключена")
 
-                # start connection handler
+                # start video connection handler
                 pass
+        elif not self.cam_conn_state and self.proxy_checkBox.isChecked():
+            data = ConnectCmdIn()
+            for i, c in enumerate(self.camera_name.currentText().encode()):
+                data.name[i] = c
+            data.port = 0
+            data = pack_payload(2, 2, bytes(data))
+            self.server_conn_tcp.sendall(data)
+
+            self.camera_name.setEnabled(False)
+            self.camera_password.setEnabled(False)
+            self.server_connect_btn.setEnabled(False)
+            self.camera_connect_btn.setText("Disconnect")
+            self.proxy_checkBox.setEnabled(False)
+            self.cam_conn_state = True
+
+            # start video connection handler
+            pass
         else:
             if self.cam_conn_tcp:
                 self.cam_conn_tcp.close()  # close connection
                 self.client_socket.close()
+            if self.proxy_checkBox.isChecked():
+                data = ConnectCmdIn()
+                data = pack_payload(2, 3, b"")
+                self.server_conn_tcp.sendall(data)
+
+            self.cam_conn_tcp = None
+            self.client_socket = None
             self.camera_name.setEnabled(True)
             self.camera_password.setEnabled(True)
             self.server_connect_btn.setEnabled(True)
             self.camera_connect_btn.setText("Connect")
+            self.proxy_checkBox.setEnabled(True)
 
             self.cam_conn_state = False
 
@@ -113,12 +139,18 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             self.server_conn_state = False
 
     def ctrl_val_update(self):
-        if self.cam_conn_tcp and self.cam_conn_state:
+        if self.client_socket and self.cam_conn_state:
             data = CamPos()
             data.x = self.x_slider.value()
             data.y = self.y_slider.value()
             data = pack_payload(3, 1, bytes(data))
             self.client_socket.sendall(data)
+        elif self.server_conn_state and self.cam_conn_state and self.proxy_checkBox.isChecked():
+            data = CamPos()
+            data.x = self.x_slider.value()
+            data.y = self.y_slider.value()
+            data = pack_payload(3, 1, bytes(data))
+            self.server_conn_tcp.sendall(data)
 
     def connection_handler(self):
         pass
