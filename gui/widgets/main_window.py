@@ -4,8 +4,9 @@ from ..designs.main_window_widget import Ui_MainWindow
 from protocol import pack_payload, DeviceInfo, Header, get_cameras_list, ConnectCmdIn, CamPos
 from ctypes import sizeof
 
-from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QMainWindow, QLabel
 from PyQt6.QtCore import QThread, pyqtSignal
+from PyQt6.QtGui import QImage, QPixmap
 
 
 class MainWindow(Ui_MainWindow, QMainWindow):
@@ -18,10 +19,14 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.cam_conn_tcp = None
         self.client_socket = None
         self.client_address = None
-        self.cam_conn_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
         self.server_conn_state = False
         self.server_conn_tcp = None
+
+        self.pic = QLabel()
+        self.cam_layout.addWidget(self.pic)
+
+        self.udp_cam_th = UdpListenerThread(7779, self.pic)
 
     def connect_camera(self):
         if not self.cam_conn_state and not self.proxy_checkBox.isChecked():
@@ -57,8 +62,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 self.cam_conn_state = True
                 self.statusBar().showMessage(f"Камера {self.camera_name.currentText()} підключена")
 
-                # start video connection handler
-                pass
+                self.udp_cam_th.start()  # start video connection handler
         elif not self.cam_conn_state and self.proxy_checkBox.isChecked():
             data = ConnectCmdIn()
             for i, c in enumerate(self.camera_name.currentText().encode()):
@@ -77,13 +81,15 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             # start video connection handler
             pass
         else:
+            # close connections
             if self.cam_conn_tcp:
-                self.cam_conn_tcp.close()  # close connection
+                self.cam_conn_tcp.close()
                 self.client_socket.close()
             if self.proxy_checkBox.isChecked():
                 data = ConnectCmdIn()
                 data = pack_payload(2, 3, b"")
                 self.server_conn_tcp.sendall(data)
+            self.udp_cam_th.stop()  # stop camera thread
 
             self.cam_conn_tcp = None
             self.client_socket = None
@@ -152,9 +158,6 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             data = pack_payload(3, 1, bytes(data))
             self.server_conn_tcp.sendall(data)
 
-    def connection_handler(self):
-        pass
-
     def refresh_cam_list(self):
         data = Header()
         data.cmd_class = 1
@@ -191,27 +194,37 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
 
 class UdpListenerThread(QThread):
-    message_received = pyqtSignal(bytes)
 
-    def __init__(self, port):
+    def __init__(self, port, dst):
         super().__init__()
         self.port = port
         self.running = True
+        self.pic: QLabel = dst
 
     def run(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind("0.0.0.0", self.port)
+        sock.bind(("0.0.0.0", self.port))
         sock.settimeout(1)
+        pic = bytearray()
         while self.running:
             try:
-                data = sock.recv(1024)
+                data = sock.recv(1024 * 2)
             except socket.timeout:
                 continue
 
-            self.message_received.emit(data)
-
             if not data:
-                self.stop()  # socket was closed
+                print("no cam data")
+                continue
+
+            pic += data
+            if len(data) < 1024:
+                image = QImage()
+                image.loadFromData(pic)
+                pixmap = QPixmap(image)
+                self.pic.setPixmap(pixmap)
+                self.pic.show()
+                pic = bytearray()
+
         sock.close()
 
     def stop(self):

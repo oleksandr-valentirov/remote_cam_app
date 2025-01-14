@@ -16,11 +16,7 @@
   <widget class="QWidget" name="central_widget">
    <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,0">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <item>
-       <widget class="QWidget" name="camera_widget" native="true"/>
-      </item>
-     </layout>
+     <layout class="QHBoxLayout" name="cam_layout"/>
     </item>
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,1">
