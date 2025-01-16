@@ -53,6 +53,9 @@ class CamPos(ctypes.LittleEndianStructure):
 
 
 class ConnectCmdIn(ctypes.LittleEndianStructure):
+    """
+    is used on a client side to send a connect cmd to the server
+    """
     _pack_ = 1
     _fields_ = (
         ("name", ctypes.c_uint8 * NAME_LEN),
@@ -61,10 +64,20 @@ class ConnectCmdIn(ctypes.LittleEndianStructure):
 
 
 class ConnectCmdOut(ctypes.LittleEndianStructure):
+    """
+    is used in a server to redirect a connect cmd from the client to the device
+    """
     _pack_ = 1
     _fields_ = (
         ("ip", ctypes.c_uint32),
         ("port", ctypes.c_uint16)
+    )
+
+
+class ConnectVideo(ctypes.LittleEndianStructure):
+    _pack_ = 1
+    _fields_ = (
+        ("port", ctypes.c_uint16),
     )
 
 

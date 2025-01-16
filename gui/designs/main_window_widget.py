@@ -126,7 +126,7 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "RemoteCam"))
         self.label.setText(_translate("MainWindow", "Server"))
-        self.server_ip.setPlaceholderText(_translate("MainWindow", "IP address"))
+        self.server_ip.setPlaceholderText(_translate("MainWindow", "ip addr:port"))
         self.server_password.setPlaceholderText(_translate("MainWindow", "Password"))
         self.server_connect_btn.setText(_translate("MainWindow", "Connect"))
         self.refresh_btn.setText(_translate("MainWindow", "Refresh"))

@@ -1,7 +1,7 @@
 import socket
 
 from ..designs.main_window_widget import Ui_MainWindow
-from protocol import pack_payload, DeviceInfo, Header, get_cameras_list, ConnectCmdIn, CamPos
+from protocol import pack_payload, DeviceInfo, Header, get_cameras_list, ConnectCmdIn, CamPos, ConnectVideo
 from ctypes import sizeof
 
 from PyQt6.QtWidgets import QMainWindow, QLabel
@@ -26,7 +26,11 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.pic = QLabel()
         self.cam_layout.addWidget(self.pic)
 
-        self.udp_cam_th = UdpListenerThread(7779, self.pic)
+        self.udp_cam_th = None        
+
+    def update_pic(self, pixmap):
+        self.pic.setPixmap(pixmap)
+        self.pic.show()
 
     def connect_camera(self):
         if not self.cam_conn_state and not self.proxy_checkBox.isChecked():
@@ -62,7 +66,13 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 self.cam_conn_state = True
                 self.statusBar().showMessage(f"Камера {self.camera_name.currentText()} підключена")
 
+                self.udp_cam_th = create_video_thread(7779, self.update_pic)
                 self.udp_cam_th.start()  # start video connection handler
+                # send a connect video cmd to the camera
+                data = ConnectVideo()
+                data.port = 7779
+                data = pack_payload(2, 4, bytes(data))
+                self.client_socket.sendall(data)
         elif not self.cam_conn_state and self.proxy_checkBox.isChecked():
             data = ConnectCmdIn()
             for i, c in enumerate(self.camera_name.currentText().encode()):
@@ -83,13 +93,20 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         else:
             # close connections
             if self.cam_conn_tcp:
+                data = ConnectCmdIn()  # send disconnect cmd
+                data = pack_payload(2, 3, b"")
+                self.client_socket.sendall(data)
+                # close sockets
                 self.cam_conn_tcp.close()
                 self.client_socket.close()
             if self.proxy_checkBox.isChecked():
-                data = ConnectCmdIn()
+                data = ConnectCmdIn()  # send disconnect cmd
                 data = pack_payload(2, 3, b"")
                 self.server_conn_tcp.sendall(data)
-            self.udp_cam_th.stop()  # stop camera thread
+            if self.udp_cam_th:
+                self.udp_cam_th.stop()  # stop camera thread
+                self.udp_cam_th.deleteLater()
+                self.udp_cam_th = None
 
             self.cam_conn_tcp = None
             self.client_socket = None
@@ -194,12 +211,12 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
 
 class UdpListenerThread(QThread):
+    new_img = pyqtSignal(QPixmap)
 
-    def __init__(self, port, dst):
+    def __init__(self, port):
         super().__init__()
         self.port = port
         self.running = True
-        self.pic: QLabel = dst
 
     def run(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -221,8 +238,7 @@ class UdpListenerThread(QThread):
                 image = QImage()
                 image.loadFromData(pic)
                 pixmap = QPixmap(image)
-                self.pic.setPixmap(pixmap)
-                self.pic.show()
+                self.new_img.emit(pixmap)
                 pic = bytearray()
 
         sock.close()
@@ -230,3 +246,9 @@ class UdpListenerThread(QThread):
     def stop(self):
         self.running = False
         self.wait()
+
+
+def create_video_thread(port, new_image_callback):
+    t = UdpListenerThread(port)
+    t.new_img.connect(new_image_callback)
+    return t

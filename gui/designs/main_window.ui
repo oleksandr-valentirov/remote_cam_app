@@ -42,7 +42,7 @@
                <number>21</number>
               </property>
               <property name="placeholderText">
-               <string>IP address</string>
+               <string>ip addr:port</string>
               </property>
              </widget>
             </item>
